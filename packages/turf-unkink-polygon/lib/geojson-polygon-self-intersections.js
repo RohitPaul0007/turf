@@ -6,34 +6,34 @@ export default function (feature, filterFn, useSpatialIndex) {
     throw new Error("The input feature must be a Polygon");
   if (useSpatialIndex === undefined) useSpatialIndex = 1;
 
-  var coord = feature.geometry.coordinates;
+  let coord = feature.geometry.coordinates;
 
-  var output = [];
-  var seen = {};
+  let output = [];
+  let seen = {};
 
   if (useSpatialIndex) {
-    var allEdgesAsRbushTreeItems = [];
-    for (var ring0 = 0; ring0 < coord.length; ring0++) {
-      for (var edge0 = 0; edge0 < coord[ring0].length - 1; edge0++) {
+    let allEdgesAsRbushTreeItems = [];
+    for (let ring0 = 0; ring0 < coord.length; ring0++) {
+      for (let edge0 = 0; edge0 < coord[ring0].length - 1; edge0++) {
         allEdgesAsRbushTreeItems.push(rbushTreeItem(ring0, edge0));
       }
     }
-    var tree = new rbush();
+    let tree = new rbush();
     tree.load(allEdgesAsRbushTreeItems);
   }
 
-  for (var ringA = 0; ringA < coord.length; ringA++) {
-    for (var edgeA = 0; edgeA < coord[ringA].length - 1; edgeA++) {
+  for (let ringA = 0; ringA < coord.length; ringA++) {
+    for (let edgeA = 0; edgeA < coord[ringA].length - 1; edgeA++) {
       if (useSpatialIndex) {
-        var bboxOverlaps = tree.search(rbushTreeItem(ringA, edgeA));
+        let bboxOverlaps = tree.search(rbushTreeItem(ringA, edgeA));
         bboxOverlaps.forEach(function (bboxIsect) {
-          var ring1 = bboxIsect.ring;
-          var edge1 = bboxIsect.edge;
+          let ring1 = bboxIsect.ring;
+          let edge1 = bboxIsect.edge;
           ifIsectAddToOutput(ringA, edgeA, ring1, edge1);
         });
       } else {
-        for (var ring1 = 0; ring1 < coord.length; ring1++) {
-          for (var edge1 = 0; edge1 < coord[ring1].length - 1; edge1++) {
+        for (let ring1 = 0; ring1 < coord.length; ring1++) {
+          for (let edge1 = 0; edge1 < coord[ring1].length - 1; edge1++) {
             // TODO: speedup possible if only interested in unique: start last two loops at ringA and edgeA+1
             ifIsectAddToOutput(ringA, edgeA, ring1, edge1);
           }
@@ -51,16 +51,16 @@ export default function (feature, filterFn, useSpatialIndex) {
 
   // Function to check if two edges intersect and add the intersection to the output
   function ifIsectAddToOutput(ring0, edge0, ring1, edge1) {
-    var start0 = coord[ring0][edge0];
-    var end0 = coord[ring0][edge0 + 1];
-    var start1 = coord[ring1][edge1];
-    var end1 = coord[ring1][edge1 + 1];
+    let start0 = coord[ring0][edge0];
+    let end0 = coord[ring0][edge0 + 1];
+    let start1 = coord[ring1][edge1];
+    let end1 = coord[ring1][edge1 + 1];
 
-    var isect = intersect(start0, end0, start1, end1);
+    let isect = intersect(start0, end0, start1, end1);
 
     if (isect === null) return; // discard parallels and coincidence
-    var frac0;
-    var frac1;
+    let frac0;
+    let frac1;
     if (end0[0] !== start0[0]) {
       frac0 = (isect[0] - start0[0]) / (end0[0] - start0[0]);
     } else {
@@ -73,8 +73,8 @@ export default function (feature, filterFn, useSpatialIndex) {
     }
     if (frac0 >= 1 || frac0 <= 0 || frac1 >= 1 || frac1 <= 0) return; // require segment intersection
 
-    var key = isect;
-    var unique = !seen[key];
+    let key = isect;
+    let unique = !seen[key];
     if (unique) {
       seen[key] = true;
     }
